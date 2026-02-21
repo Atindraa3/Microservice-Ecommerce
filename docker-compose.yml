@@ -1,0 +1,100 @@
+version: "3.9"
+
+services:
+  mysql:
+    image: mysql:8.3
+    container_name: ecommerce-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-localpass}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./docker/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+
+  discovery:
+    build: ./DiscoveryService
+    container_name: discovery-service
+    restart: unless-stopped
+    ports:
+      - "8761:8761"
+
+  auth-service:
+    build: ./AuthService
+    container_name: auth-service
+    restart: unless-stopped
+    depends_on:
+      - mysql
+      - discovery
+    environment:
+      EUREKA_URL: http://discovery:8761/eureka/
+      AUTH_DB_URL: jdbc:mysql://mysql:3306/auth_db
+      DB_USERNAME: root
+      DB_PASSWORD: ${DB_PASSWORD:-localpass}
+      JWT_SECRET: ${JWT_SECRET:-change-this-secret-to-a-long-random-string-1234567890}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5173}
+      ADMIN_EMAILS: ${ADMIN_EMAILS:-admin@example.com}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+    ports:
+      - "9898:9898"
+
+  inventory-service:
+    build: ./InventoryService
+    container_name: inventory-service
+    restart: unless-stopped
+    depends_on:
+      - mysql
+      - discovery
+    environment:
+      EUREKA_URL: http://discovery:8761/eureka/
+      INVENTORY_DB_URL: jdbc:mysql://mysql:3306/inventory_db
+      DB_USERNAME: root
+      DB_PASSWORD: ${DB_PASSWORD:-localpass}
+      JWT_SECRET: ${JWT_SECRET:-change-this-secret-to-a-long-random-string-1234567890}
+    ports:
+      - "8081:8081"
+
+  order-service:
+    build: ./OrderService
+    container_name: order-service
+    restart: unless-stopped
+    depends_on:
+      - mysql
+      - discovery
+    environment:
+      EUREKA_URL: http://discovery:8761/eureka/
+      ORDER_DB_URL: jdbc:mysql://mysql:3306/order_db
+      DB_USERNAME: root
+      DB_PASSWORD: ${DB_PASSWORD:-localpass}
+      JWT_SECRET: ${JWT_SECRET:-change-this-secret-to-a-long-random-string-1234567890}
+    ports:
+      - "8080:8080"
+
+  api-gateway:
+    build: ./api-gateway
+    container_name: api-gateway
+    restart: unless-stopped
+    depends_on:
+      - discovery
+    environment:
+      EUREKA_URL: http://discovery:8761/eureka/
+      JWT_SECRET: ${JWT_SECRET:-change-this-secret-to-a-long-random-string-1234567890}
+    ports:
+      - "8082:8082"
+
+  notification-service:
+    build: ./notification-service
+    container_name: notification-service
+    restart: unless-stopped
+    depends_on:
+      - discovery
+    environment:
+      EUREKA_URL: http://discovery:8761/eureka/
+      JWT_SECRET: ${JWT_SECRET:-change-this-secret-to-a-long-random-string-1234567890}
+    ports:
+      - "8083:8083"
+
+volumes:
+  mysql_data:
