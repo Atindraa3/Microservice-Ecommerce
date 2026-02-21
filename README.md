@@ -36,20 +36,10 @@ flowchart LR
 - Java 21
 - Maven
 - Node.js 18+
-- Docker (for local compose)
-- MySQL (if running manually)
+- Docker 
+- MySQL 
 
-## Configuration (Environment Variables)
-These are read by `application.properties` and `docker-compose.yml`:
-- `DB_USERNAME` (default `root`)
-- `DB_PASSWORD`
-- `AUTH_DB_URL`, `ORDER_DB_URL`, `INVENTORY_DB_URL`
-- `EUREKA_URL` (default `http://localhost:8761/eureka/`)
-- `JWT_SECRET`
-- `ADMIN_EMAILS` (comma-separated)
-- `FRONTEND_URL` (default `http://localhost:5173`)
-- `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`
-- Frontend: `VITE_API_BASE` (default `http://localhost:8082`)
+
 
 ## Run Locally (Docker Compose)
 ```bash
